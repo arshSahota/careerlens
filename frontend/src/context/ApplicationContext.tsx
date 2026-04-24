@@ -4,6 +4,7 @@ import type { Application } from "../types/Application";
 type ApplicationContextType = {
   applications: Application[];
   addApplication: (app: Application) => void;
+  updateApplication: (app: Application) => void;
 };
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(
@@ -16,18 +17,18 @@ export function ApplicationProvider({
   children: React.ReactNode;
 }) {
   const [applications, setApplications] = useState<Application[]>([]);
-  const [hydrated, setHydrated] = useState(false); // ✅ IMPORTANT FLAG
+  const [hydrated, setHydrated] = useState(false);
 
-  // ✅ LOAD once on app start
+  // ✅ Load once
   useEffect(() => {
     const stored = localStorage.getItem("applications");
     if (stored) {
       setApplications(JSON.parse(stored));
     }
-    setHydrated(true); // ✅ mark load as complete
+    setHydrated(true);
   }, []);
 
-  // ✅ SAVE only AFTER hydration
+  // ✅ Save after load
   useEffect(() => {
     if (!hydrated) return;
     localStorage.setItem("applications", JSON.stringify(applications));
@@ -37,8 +38,16 @@ export function ApplicationProvider({
     setApplications((prev) => [...prev, app]);
   }
 
+  function updateApplication(updated: Application) {
+    setApplications((prev) =>
+      prev.map((app) => (app.id === updated.id ? updated : app))
+    );
+  }
+
   return (
-    <ApplicationContext.Provider value={{ applications, addApplication }}>
+    <ApplicationContext.Provider
+      value={{ applications, addApplication, updateApplication }}
+    >
       {children}
     </ApplicationContext.Provider>
   );

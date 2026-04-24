@@ -3,8 +3,17 @@ import Navbar from "../components/Navbar";
 import { useApplications } from "../context/ApplicationContext";
 import type { Application } from "../types/Application";
 
+const STATUS_OPTIONS: Application["status"][] = [
+  "Applied",
+  "Interview",
+  "Offer",
+  "Rejected",
+];
+
 function ApplicationsPage() {
-  const { applications, addApplication } = useApplications();
+  const { applications, addApplication, updateApplication } =
+    useApplications();
+
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
 
@@ -37,6 +46,7 @@ function ApplicationsPage() {
           onChange={(e) => setCompany(e.target.value)}
         />
         <br /><br />
+
         <input
           placeholder="Role"
           value={role}
@@ -44,14 +54,33 @@ function ApplicationsPage() {
           onChange={(e) => setRole(e.target.value)}
         />
         <br /><br />
+
         <button type="submit">Add Application</button>
       </form>
 
       <hr />
 
       {applications.map((app) => (
-        <div key={app.id}>
-          <strong>{app.company}</strong> – {app.role} ({app.status})
+        <div key={app.id} style={{ marginBottom: "12px" }}>
+          <strong>{app.company}</strong> – {app.role}
+
+          <br />
+
+          <select
+            value={app.status}
+            onChange={(e) =>
+              updateApplication({
+                ...app,
+                status: e.target.value as Application["status"],
+              })
+            }
+          >
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
         </div>
       ))}
     </div>
