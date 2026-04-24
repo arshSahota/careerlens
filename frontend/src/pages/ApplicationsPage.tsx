@@ -3,16 +3,13 @@ import Navbar from "../components/Navbar";
 import { useApplications } from "../context/ApplicationContext";
 import type { Application } from "../types/Application";
 
-const STATUS_OPTIONS: Application["status"][] = [
-  "Applied",
-  "Interview",
-  "Offer",
-  "Rejected",
-];
-
 function ApplicationsPage() {
-  const { applications, addApplication, updateApplication } =
-    useApplications();
+  const {
+    applications,
+    resumes,
+    addApplication,
+    updateApplication,
+  } = useApplications();
 
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
@@ -61,23 +58,24 @@ function ApplicationsPage() {
       <hr />
 
       {applications.map((app) => (
-        <div key={app.id} style={{ marginBottom: "12px" }}>
+        <div key={app.id}>
           <strong>{app.company}</strong> – {app.role}
 
           <br />
 
           <select
-            value={app.status}
+            value={app.resumeId ?? ""}
             onChange={(e) =>
               updateApplication({
                 ...app,
-                status: e.target.value as Application["status"],
+                resumeId: Number(e.target.value),
               })
             }
           >
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {status}
+            <option value="">Select resume</option>
+            {resumes.map((resume) => (
+              <option key={resume.id} value={resume.id}>
+                {resume.name}
               </option>
             ))}
           </select>

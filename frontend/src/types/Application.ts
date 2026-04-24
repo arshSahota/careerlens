@@ -3,6 +3,6 @@ export type Application = {
   company: string;
   role: string;
   status: "Applied" | "Interview" | "Offer" | "Rejected";
+  resumeId?: number;
   createdAt: string;
 };
-``
