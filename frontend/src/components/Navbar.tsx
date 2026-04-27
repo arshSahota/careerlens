@@ -17,8 +17,29 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-inner">
-        <span className="logo">CareerLens</span>
+        {/* Logo */}
+        <div className="logo">
+          <span
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: "10px",
+              background:
+                "linear-gradient(135deg, var(--primary), var(--accent))",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              fontWeight: 800,
+              fontSize: "1rem",
+            }}
+          >
+            C
+          </span>
+          CareerLens
+        </div>
 
+        {/* Navigation */}
         <div className="nav-links">
           <Link className={linkClass("/dashboard")} to="/dashboard">
             Dashboard
@@ -28,15 +49,7 @@ function Navbar() {
             Applications
           </Link>
 
-          <button
-            onClick={handleLogout}
-            className="nav-link"
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={handleLogout} className="nav-link">
             Logout
           </button>
         </div>
