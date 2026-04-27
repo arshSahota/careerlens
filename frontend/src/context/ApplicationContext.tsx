@@ -1,11 +1,20 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";import { supabase } from "../lib/supabase";
+import { useAuth } from "./AuthContext";
 import type { Application } from "../types/Application";
 
 type ApplicationContextType = {
   applications: Application[];
-  addApplication: (app: Application) => void;
-  updateApplicationStatus: (id: string, status: Application["status"]) => void;
-  removeApplication: (id: string) => void;
+  loading: boolean;
+  addApplication: (app: {
+    company: string;
+    role: string;
+    jobDescription?: string;
+  }) => Promise<void>;
+  updateApplicationStatus: (
+    id: string,
+    status: Application["status"]
+  ) => Promise<void>;
+  deleteApplication: (id: string) => Promise<void>;
 };
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(
@@ -17,29 +26,86 @@ export function ApplicationProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { session } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Load from localStorage (TEMP until Supabase)
   useEffect(() => {
-    const stored = localStorage.getItem("applications");
-    if (stored) {
-      setApplications(JSON.parse(stored));
+    if (!session) {
+      setApplications([]);
+      setLoading(false);
+      return;
     }
-  }, []);
 
-  // ✅ Persist
-  useEffect(() => {
-    localStorage.setItem("applications", JSON.stringify(applications));
-  }, [applications]);
+    async function fetchApplications() {
+      setLoading(true);
 
-  function addApplication(app: Application) {
-    setApplications((prev) => [...prev, app]);
+      const { data, error } = await supabase
+        .from("applications")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setApplications(
+          data.map((row) => ({
+            id: row.id,
+            company: row.company,
+            role: row.role,
+            status: row.status,
+            jobDescription: row.job_description ?? "",
+            createdAt: row.created_at,
+          }))
+        );
+      }
+
+      setLoading(false);
+    }
+
+    fetchApplications();
+  }, [session]);
+
+  async function addApplication(app: {
+    company: string;
+    role: string;
+    jobDescription?: string;
+  }) {
+    if (!session) return;
+
+    const { error } = await supabase.from("applications").insert({
+      user_id: session.user.id,
+      company: app.company,
+      role: app.role,
+      status: "Applied",
+      job_description: app.jobDescription,
+    });
+
+    if (!error) {
+      const { data } = await supabase
+        .from("applications")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        setApplications(
+          data.map((row) => ({
+            id: row.id,
+            company: row.company,
+            role: row.role,
+            status: row.status,
+            jobDescription: row.job_description ?? "",
+            createdAt: row.created_at,
+          }))
+        );
+      }
+    }
   }
 
-  function updateApplicationStatus(
+  async function updateApplicationStatus(
     id: string,
     status: Application["status"]
   ) {
+    await supabase.from("applications").update({ status }).eq("id", id);
+
     setApplications((prev) =>
       prev.map((app) =>
         app.id === id ? { ...app, status } : app
@@ -47,17 +113,22 @@ export function ApplicationProvider({
     );
   }
 
-  function removeApplication(id: string) {
-    setApplications((prev) => prev.filter((app) => app.id !== id));
+  async function deleteApplication(id: string) {
+    await supabase.from("applications").delete().eq("id", id);
+
+    setApplications((prev) =>
+      prev.filter((app) => app.id !== id)
+    );
   }
 
   return (
     <ApplicationContext.Provider
       value={{
         applications,
+        loading,
         addApplication,
         updateApplicationStatus,
-        removeApplication,
+        deleteApplication,
       }}
     >
       {children}
@@ -69,7 +140,7 @@ export function useApplications() {
   const context = useContext(ApplicationContext);
   if (!context) {
     throw new Error(
-      "useApplications must be used within an ApplicationProvider"
+      "useApplications must be used within ApplicationProvider"
     );
   }
   return context;

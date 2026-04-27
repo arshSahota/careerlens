@@ -6,30 +6,31 @@ import type { ApplicationStatus } from "../types/Application";
 function ApplicationsPage() {
   const {
     applications,
+    loading,
     addApplication,
     updateApplicationStatus,
-    removeApplication,
+    deleteApplication,
   } = useApplications();
 
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitting(true);
 
-    addApplication({
-      id: crypto.randomUUID(),
+    await addApplication({
       company,
       role,
       jobDescription,
-      status: "Applied",
-      createdAt: new Date().toISOString(),
     });
 
     setCompany("");
     setRole("");
     setJobDescription("");
+    setSubmitting(false);
   }
 
   return (
@@ -38,6 +39,7 @@ function ApplicationsPage() {
       <div className="page">
         <h2>Applications</h2>
 
+        {/* Add Application Form */}
         <div className="card">
           <form onSubmit={handleSubmit}>
             <input
@@ -46,22 +48,36 @@ function ApplicationsPage() {
               onChange={(e) => setCompany(e.target.value)}
               required
             />
+
             <input
               placeholder="Role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
               required
             />
+
             <textarea
               placeholder="Job description (optional)"
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
               rows={5}
             />
-            <button type="submit">Add Application</button>
+
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Adding..." : "Add Application"}
+            </button>
           </form>
         </div>
 
+        {/* Loading state */}
+        {loading && <p>Loading applications...</p>}
+
+        {/* Empty state */}
+        {!loading && applications.length === 0 && (
+          <p>No applications yet. Add your first one above.</p>
+        )}
+
+        {/* Applications list */}
         {applications.map((app) => (
           <div className="card" key={app.id}>
             <strong>{app.company}</strong>
@@ -84,7 +100,7 @@ function ApplicationsPage() {
 
             <button
               style={{ marginTop: "8px" }}
-              onClick={() => removeApplication(app.id)}
+              onClick={() => deleteApplication(app.id)}
             >
               Delete
             </button>
