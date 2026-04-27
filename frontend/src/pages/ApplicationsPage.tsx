@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Navbar from "../components/Navbar";
 import { useApplications } from "../context/ApplicationContext";
 import type { ApplicationStatus } from "../types/Application";
@@ -16,6 +16,7 @@ function ApplicationsPage() {
   const [role, setRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,13 +34,26 @@ function ApplicationsPage() {
     setSubmitting(false);
   }
 
+  // ✅ Search logic (company OR role)
+  const filteredApplications = useMemo(() => {
+    if (!search.trim()) return applications;
+
+    const query = search.toLowerCase();
+
+    return applications.filter(
+      (app) =>
+        app.company.toLowerCase().includes(query) ||
+        app.role.toLowerCase().includes(query)
+    );
+  }, [applications, search]);
+
   return (
     <>
       <Navbar />
       <div className="page">
         <h2>Applications</h2>
 
-        {/* Add Application Form */}
+        {/* Add Application */}
         <div className="card">
           <form onSubmit={handleSubmit}>
             <input
@@ -69,16 +83,29 @@ function ApplicationsPage() {
           </form>
         </div>
 
-        {/* Loading state */}
+        {/* Search */}
+        <div className="card">
+          <input
+            placeholder="Search by company or role..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Loading */}
         {loading && <p>Loading applications...</p>}
 
-        {/* Empty state */}
+        {/* Empty states */}
         {!loading && applications.length === 0 && (
           <p>No applications yet. Add your first one above.</p>
         )}
 
+        {!loading && applications.length > 0 && filteredApplications.length === 0 && (
+          <p>No matching applications found.</p>
+        )}
+
         {/* Applications list */}
-        {applications.map((app) => (
+        {filteredApplications.map((app) => (
           <div className="card" key={app.id}>
             <strong>{app.company}</strong>
             <div style={{ color: "#475569" }}>{app.role}</div>
