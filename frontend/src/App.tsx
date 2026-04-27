@@ -1,39 +1,42 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ApplicationsPage from "./pages/ApplicationsPage";
-import ResumesPage from "./pages/ResumesPage";
 import { ApplicationProvider } from "./context/ApplicationContext";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  const isLoggedIn = localStorage.getItem("loggedIn");
-
   return (
-    <ApplicationProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
+    <AuthProvider>
+      <ApplicationProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public route */}
+            <Route path="/" element={<LoginPage />} />
 
-          <Route
-            path="/dashboard"
-            element={isLoggedIn ? <DashboardPage /> : <Navigate to="/" />}
-          />
-          <Route
-            path="/applications"
-            element={isLoggedIn ? <ApplicationsPage /> : <Navigate to="/" />}
-          />
-          <Route
-            path="/resumes"
-            element={isLoggedIn ? <ResumesPage /> : <Navigate to="/" />}
-          />
-        </Routes>
-      </BrowserRouter>
-    </ApplicationProvider>
+            {/* Protected routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/applications"
+              element={
+                <ProtectedRoute>
+                  <ApplicationsPage />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </ApplicationProvider>
+    </AuthProvider>
   );
 }
 

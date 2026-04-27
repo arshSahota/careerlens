@@ -1,8 +1,16 @@
-export type Application = {
-  id: number;
+// src/types/Application.ts
+
+export type ApplicationStatus =
+  | "Applied"
+  | "Interview"
+  | "Offer"
+  | "Rejected";
+
+export interface Application {
+  id: string;
   company: string;
   role: string;
-  status: "Applied" | "Interview" | "Offer" | "Rejected";
-  resumeId?: number;
+  jobDescription?: string;
+  status: ApplicationStatus;
   createdAt: string;
-};
+}

@@ -1,13 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { Application } from "../types/Application";
-import type { Resume } from "../types/Resume";
 
 type ApplicationContextType = {
   applications: Application[];
-  resumes: Resume[];
   addApplication: (app: Application) => void;
-  updateApplication: (app: Application) => void;
-  addResume: (resume: Resume) => void;
+  updateApplicationStatus: (id: string, status: Application["status"]) => void;
+  removeApplication: (id: string) => void;
 };
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(
@@ -20,44 +18,47 @@ export function ApplicationProvider({
   children: React.ReactNode;
 }) {
   const [applications, setApplications] = useState<Application[]>([]);
-  const [resumes, setResumes] = useState<Resume[]>([]);
-  const [hydrated, setHydrated] = useState(false);
 
-  // ✅ Load once
+  // ✅ Load from localStorage (TEMP until Supabase)
   useEffect(() => {
-    const storedApps = localStorage.getItem("applications");
-    const storedResumes = localStorage.getItem("resumes");
-
-    if (storedApps) setApplications(JSON.parse(storedApps));
-    if (storedResumes) setResumes(JSON.parse(storedResumes));
-
-    setHydrated(true);
+    const stored = localStorage.getItem("applications");
+    if (stored) {
+      setApplications(JSON.parse(stored));
+    }
   }, []);
 
-  // ✅ Save after hydration
+  // ✅ Persist
   useEffect(() => {
-    if (!hydrated) return;
     localStorage.setItem("applications", JSON.stringify(applications));
-    localStorage.setItem("resumes", JSON.stringify(resumes));
-  }, [applications, resumes, hydrated]);
+  }, [applications]);
 
   function addApplication(app: Application) {
     setApplications((prev) => [...prev, app]);
   }
 
-  function updateApplication(updated: Application) {
+  function updateApplicationStatus(
+    id: string,
+    status: Application["status"]
+  ) {
     setApplications((prev) =>
-      prev.map((app) => (app.id === updated.id ? updated : app))
+      prev.map((app) =>
+        app.id === id ? { ...app, status } : app
+      )
     );
   }
 
-  function addResume(resume: Resume) {
-    setResumes((prev) => [...prev, resume]);
+  function removeApplication(id: string) {
+    setApplications((prev) => prev.filter((app) => app.id !== id));
   }
 
   return (
     <ApplicationContext.Provider
-      value={{ applications, resumes, addApplication, updateApplication, addResume }}
+      value={{
+        applications,
+        addApplication,
+        updateApplicationStatus,
+        removeApplication,
+      }}
     >
       {children}
     </ApplicationContext.Provider>
@@ -67,7 +68,9 @@ export function ApplicationProvider({
 export function useApplications() {
   const context = useContext(ApplicationContext);
   if (!context) {
-    throw new Error("useApplications must be used within ApplicationProvider");
+    throw new Error(
+      "useApplications must be used within an ApplicationProvider"
+    );
   }
   return context;
 }

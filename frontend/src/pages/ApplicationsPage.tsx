@@ -1,87 +1,97 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { useApplications } from "../context/ApplicationContext";
-import type { Application } from "../types/Application";
+import type { ApplicationStatus } from "../types/Application";
 
 function ApplicationsPage() {
   const {
     applications,
-    resumes,
     addApplication,
-    updateApplication,
+    updateApplicationStatus,
+    removeApplication,
   } = useApplications();
 
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const newApplication: Application = {
-      id: Date.now(),
+    addApplication({
+      id: crypto.randomUUID(),
       company,
       role,
+      jobDescription,
       status: "Applied",
       createdAt: new Date().toISOString(),
-    };
+    });
 
-    addApplication(newApplication);
     setCompany("");
     setRole("");
+    setJobDescription("");
   }
 
   return (
-    <div>
+    <>
       <Navbar />
-      <h2>Applications</h2>
+      <div className="page">
+        <h2>Applications</h2>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          placeholder="Company"
-          value={company}
-          required
-          onChange={(e) => setCompany(e.target.value)}
-        />
-        <br /><br />
-
-        <input
-          placeholder="Role"
-          value={role}
-          required
-          onChange={(e) => setRole(e.target.value)}
-        />
-        <br /><br />
-
-        <button type="submit">Add Application</button>
-      </form>
-
-      <hr />
-
-      {applications.map((app) => (
-        <div key={app.id}>
-          <strong>{app.company}</strong> – {app.role}
-
-          <br />
-
-          <select
-            value={app.resumeId ?? ""}
-            onChange={(e) =>
-              updateApplication({
-                ...app,
-                resumeId: Number(e.target.value),
-              })
-            }
-          >
-            <option value="">Select resume</option>
-            {resumes.map((resume) => (
-              <option key={resume.id} value={resume.id}>
-                {resume.name}
-              </option>
-            ))}
-          </select>
+        <div className="card">
+          <form onSubmit={handleSubmit}>
+            <input
+              placeholder="Company"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              required
+            />
+            <input
+              placeholder="Role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              required
+            />
+            <textarea
+              placeholder="Job description (optional)"
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              rows={5}
+            />
+            <button type="submit">Add Application</button>
+          </form>
         </div>
-      ))}
-    </div>
+
+        {applications.map((app) => (
+          <div className="card" key={app.id}>
+            <strong>{app.company}</strong>
+            <div style={{ color: "#475569" }}>{app.role}</div>
+
+            <select
+              value={app.status}
+              onChange={(e) =>
+                updateApplicationStatus(
+                  app.id,
+                  e.target.value as ApplicationStatus
+                )
+              }
+            >
+              <option value="Applied">Applied</option>
+              <option value="Interview">Interview</option>
+              <option value="Offer">Offer</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+
+            <button
+              style={{ marginTop: "8px" }}
+              onClick={() => removeApplication(app.id)}
+            >
+              Delete
+            </button>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 

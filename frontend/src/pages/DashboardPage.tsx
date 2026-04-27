@@ -5,26 +5,27 @@ function DashboardPage() {
   const { applications } = useApplications();
 
   const counts = {
-    Applied: applications.filter((a) => a.status === "Applied").length,
-    Interview: applications.filter((a) => a.status === "Interview").length,
-    Offer: applications.filter((a) => a.status === "Offer").length,
-    Rejected: applications.filter((a) => a.status === "Rejected").length,
+    Applied: applications.filter(a => a.status === "Applied").length,
+    Interview: applications.filter(a => a.status === "Interview").length,
+    Offer: applications.filter(a => a.status === "Offer").length,
+    Rejected: applications.filter(a => a.status === "Rejected").length,
   };
 
   return (
-    <div>
+    <>
       <Navbar />
-      <h2>Dashboard</h2>
+      <div className="page">
+        <h2>Dashboard</h2>
 
-      <p>Total applications: {applications.length}</p>
-
-      <ul>
-        <li>Applied: {counts.Applied}</li>
-        <li>Interview: {counts.Interview}</li>
-        <li>Offer: {counts.Offer}</li>
-        <li>Rejected: {counts.Rejected}</li>
-      </ul>
-    </div>
+        <div className="card">
+          <p>Total applications: {applications.length}</p>
+          <p>Applied: {counts.Applied}</p>
+          <p>Interview: {counts.Interview}</p>
+          <p>Offers: {counts.Offer}</p>
+          <p>Rejected: {counts.Rejected}</p>
+        </div>
+      </div>
+    </>
   );
 }
 
